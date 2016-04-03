@@ -18,7 +18,6 @@ package net.sf.aspect4log.text;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang3.ArrayUtils;
+
 /**
  * This class is responsible for building log blocks.
  * 
@@ -44,7 +43,6 @@ public class LogFormatter {
 	public static final String ITERABLE_BEGINS_BRACKET = "{";
 	public static final String ITERABLE_ENDS_BRACKET = "}";
 
-
 	private String elementsDelitmiter = ELEMENTS_DELITMETER;
 	private String mapKeyValueDelimeter = MAP_KEY_VALUE_DELIMETER;
 	private String arrayBeginsBracket = ARRAY_BEGINS_BRACKET;
@@ -53,12 +51,11 @@ public class LogFormatter {
 	private String iterableBeginsBracket = ITERABLE_BEGINS_BRACKET;
 	private String iterableEndsBracket = ITERABLE_ENDS_BRACKET;
 
-	
 	private String undefindedToStringMethodSymbol;
 	/**
 	 * a symbol to be shown in case exception happen during to
 	 */
-	private String errorEvaluatingToStringSymbol=ERROR_EVALUTTING_TO_STRING_SYMBOL;
+	private String errorEvaluatingToStringSymbol = ERROR_EVALUTTING_TO_STRING_SYMBOL;
 	private String nullSymbol;
 
 	public String getElementsDelitmiter() {
@@ -147,75 +144,61 @@ public class LogFormatter {
 	}
 	private static final Method OBJECT_EQUALS_METHOD = OBJECT_EQUALS_METHOD_TMP;
 
-	public String toString(Map<?, ?> map) {
-		StringBuilder stringBuilder = new StringBuilder();
+	public void addMap(StringBuilder stringBuilder, Map<?, ?> map) {
+		stringBuilder.append(iterableBeginsBracket);
 		for (Iterator<?> iterator = map.entrySet().iterator(); iterator.hasNext();) {
 			Entry<?, ?> entry = (Entry<?, ?>) iterator.next();
-			toString(stringBuilder, entry.getKey());
+			add(stringBuilder, entry.getKey());
 			stringBuilder.append(mapKeyValueDelimeter);
-			toString(stringBuilder, entry.getValue());
+			add(stringBuilder, entry.getValue());
 			if (iterator.hasNext()) {
 				stringBuilder.append(elementsDelitmiter);
 			}
 		}
-		return stringBuilder.toString();
+		stringBuilder.append(iterableEndsBracket);
 	}
 
-	public String toString(Iterable<?> iterable) {
-		// check if object overrides toString http://stackoverflow.com/questions/12133817/determining-if-a-method-overrides-another-at-runtime
-		// type Ø for null. for not implemented toString ¿
-		StringBuilder stringBuilder = new StringBuilder();
-		;
+	public void addIteriable(StringBuilder stringBuilder, Iterable<?> iterable) {
+		stringBuilder.append(iterableBeginsBracket);
 		for (Iterator<?> iterator = iterable.iterator(); iterator.hasNext();) {
-			toString(stringBuilder, iterator.next());
+			stringBuilder.append(iterator.next());
 			if (iterator.hasNext()) {
 				stringBuilder.append(elementsDelitmiter);
 			}
 		}
-		return stringBuilder.toString();
+		stringBuilder.append(iterableEndsBracket);
 	}
 
-	public String toString(Object[] array) {
-		StringBuilder stringBuilder = new StringBuilder();
-		for (int i = 0; i < array.length; i++) {
-			toString(stringBuilder, array[i]);
-			if (i < array.length - 1) {
-				stringBuilder.append(elementsDelitmiter);
-			}
-		}
-		return stringBuilder.toString();
-	}
-
-	public StringBuilder toString(StringBuilder stringBuilder, Object o) {
+	public void add(StringBuilder stringBuilder, Object o) {
 		if (o != null) {
 			if (o instanceof Object[]) {
-				addArrayBrackets(stringBuilder, toString((Object[]) o));
+				addArray(stringBuilder, (Object[]) o);
 			} else if (o instanceof boolean[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((boolean[]) o)));
+				addArray(stringBuilder, (boolean[]) o);
 			} else if (o instanceof char[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((char[]) o)));
+				addArray(stringBuilder, (char[]) o);
 			} else if (o instanceof byte[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((byte[]) o)));
+				addArray(stringBuilder, (byte[]) o);
 			} else if (o instanceof short[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((short[]) o)));
+				addArray(stringBuilder, (short[]) o);
 			} else if (o instanceof int[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((int[]) o)));
+				addArray(stringBuilder, (int[]) o);
 			} else if (o instanceof long[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((long[]) o)));
+				addArray(stringBuilder, (long[]) o);
 			} else if (o instanceof float[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((float[]) o)));
+				addArray(stringBuilder, (float[]) o);
 			} else if (o instanceof double[]) {
-				addArrayBrackets(stringBuilder, toString(ArrayUtils.toObject((double[]) o)));
-			} else if (o instanceof Map<?, ?>) {
-				addIterrableBrackets(stringBuilder, toString((Map<?, ?>) o));
-			} else if (o instanceof Collection<?>) {
-				addIterrableBrackets(stringBuilder, toString(((Iterable<?>) o)));
+				addArray(stringBuilder, (double[]) o);
+			} else if (o instanceof Map) {
+				addMap(stringBuilder, (Map<?, ?>) o);
+			} else if (o instanceof Iterable<?>) {
+				addIteriable(stringBuilder, (Iterable<?>) o);
 			} else {
-				if (undefindedToStringMethodSymbol==null || isToStringOverriden(o.getClass()) ) {
-					try{
+				if (undefindedToStringMethodSymbol == null || isToStringOverriden(o.getClass())) {
+					try {
 						stringBuilder.append(o);
-					}catch(RuntimeException e){
-						addExceptionOnToStringEvaluation(stringBuilder,e.toString());
+					} catch (RuntimeException e) {
+						addExceptionOnToStringEvaluation(stringBuilder, e.toString());
 					}
 				} else {
 					stringBuilder.append(undefindedToStringMethodSymbol);
@@ -224,41 +207,133 @@ public class LogFormatter {
 		} else {
 			stringBuilder.append(nullSymbol);
 		}
-		return stringBuilder;
 	}
 
-	private void addBrackets(StringBuilder stringBuilder, String beginBracket, String string, String endBracket) {
-		stringBuilder.append(beginBracket);
-		stringBuilder.append(string);
-		stringBuilder.append(endBracket);
+	private void addArray(StringBuilder stringBuilder, Object[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			add(stringBuilder, array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
 	}
 
-	private void addArrayBrackets(StringBuilder stringBuilder, String string) {
-		addBrackets(stringBuilder, arrayBeginsBracket, string, arrayEndsBracket);
+	private void addArray(StringBuilder stringBuilder, boolean[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
 	}
 
-	private void addIterrableBrackets(StringBuilder stringBuilder, String string) {
-		addBrackets(stringBuilder, iterableBeginsBracket, string, iterableEndsBracket);
+	private void addArray(StringBuilder stringBuilder, byte[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
 	}
-	
 
-// @TODO consider implementing cache on WeakHashReferences (because class objects are rare to be gc's it's ok to use WeakHashReferences
-// private ConcurrentMap<Class<?>, Boolean> classDefaultToStringOverridenMap = new ConcurrentHashMap<Class<?>, Boolean>();
-//
-//	public boolean isToStringOverriden(Class<?> clazz) {
-//		try {
-//			Boolean isDefaultToStringOverriden = classDefaultToStringOverridenMap.get(clazz);
-//			if (isDefaultToStringOverriden == null) {
-//				isDefaultToStringOverriden = !clazz.getMethod("toString").equals(OBJECT_EQUALS_METHOD);
-//				classDefaultToStringOverridenMap.put(clazz, isDefaultToStringOverriden);
-//			}
-//			return isDefaultToStringOverriden;
-//		} catch (NoSuchMethodException | SecurityException e) {
-//			// that's impossible
-//			return false;
-//		}
-//	}
-	
+	private void addArray(StringBuilder stringBuilder, char[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
+	}
+
+	private void addArray(StringBuilder stringBuilder, short[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
+	}
+
+	private void addArray(StringBuilder stringBuilder, int[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
+	}
+
+	private void addArray(StringBuilder stringBuilder, long[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
+	}
+
+	private void addArray(StringBuilder stringBuilder, float[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
+	}
+
+	private void addArray(StringBuilder stringBuilder, double[] array) {
+		stringBuilder.append(arrayBeginsBracket);
+		int lastIndex = array.length - 1;
+		for (int i = 0; i < array.length; i++) {
+			stringBuilder.append(array[i]);
+			if (i != lastIndex) {
+				stringBuilder.append(elementsDelitmiter);
+			}
+		}
+		stringBuilder.append(arrayEndsBracket);
+	}
+
+	// @TODO consider implementing cache on WeakHashReferences (because class objects are rare to be gc's it's ok to use WeakHashReferences
+	// private ConcurrentMap<Class<?>, Boolean> classDefaultToStringOverridenMap = new ConcurrentHashMap<Class<?>, Boolean>();
+	//
+	// public boolean isToStringOverriden(Class<?> clazz) {
+	// try {
+	// Boolean isDefaultToStringOverriden = classDefaultToStringOverridenMap.get(clazz);
+	// if (isDefaultToStringOverriden == null) {
+	// isDefaultToStringOverriden = !clazz.getMethod("toString").equals(OBJECT_EQUALS_METHOD);
+	// classDefaultToStringOverridenMap.put(clazz, isDefaultToStringOverriden);
+	// }
+	// return isDefaultToStringOverriden;
+	// } catch (NoSuchMethodException | SecurityException e) {
+	// // that's impossible
+	// return false;
+	// }
+	// }
+
 	public boolean isToStringOverriden(Class<?> clazz) {
 		try {
 			return !OBJECT_EQUALS_METHOD.equals(clazz.getMethod("toString"));
@@ -270,7 +345,6 @@ public class LogFormatter {
 			return false;
 		}
 	}
-	
 
 	// \$\{(.*)\};
 	private static final Pattern VARIABLE_SEARCH_PATTERN = Pattern.compile("(?!\\$\\{\\$\\{)\\$\\{(.*?)\\}");
@@ -297,14 +371,14 @@ public class LogFormatter {
 	private String toString(Object bean, String property) {
 		StringBuilder stringBuilder = new StringBuilder();
 		try {
-			toString(stringBuilder, PropertyUtils.getProperty(bean, property));
+			add(stringBuilder, PropertyUtils.getProperty(bean, property));
 		} catch (IllegalAccessException e) {
 			addExceptionOnToStringEvaluation(stringBuilder, e.toString());
 		} catch (InvocationTargetException e) {
 			addExceptionOnToStringEvaluation(stringBuilder, e.toString());
 		} catch (NoSuchMethodException e) {
 			addExceptionOnToStringEvaluation(stringBuilder, e.toString());
-		} catch(Exception e){
+		} catch (Exception e) {
 			addExceptionOnToStringEvaluation(stringBuilder, "#Warning!!! Template caused:  " + e + " #");
 		}
 		return stringBuilder.toString();
@@ -312,9 +386,9 @@ public class LogFormatter {
 	}
 
 	private void addExceptionOnToStringEvaluation(StringBuilder stringBuilder, String errorMessage) {
-		if(errorEvaluatingToStringSymbol==null){
+		if (errorEvaluatingToStringSymbol == null) {
 			stringBuilder.append(errorMessage);
-		}else{
+		} else {
 			stringBuilder.append(errorEvaluatingToStringSymbol);
 		}
 	}

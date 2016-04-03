@@ -259,7 +259,7 @@ public class CustomisableMessageBuilderFactory implements MessageBuilderFactory 
 			buildIndent(stringBuilder);
 			buildMethodName(stringBuilder);
 			buildMethodOpenBracket(stringBuilder);
-			buildArguments(stringBuilder);
+			addObject(stringBuilder);
 			buildMethodClosedBracket(stringBuilder);
 			buildResultDelimeter(stringBuilder);
 			buildResult(stringBuilder);
@@ -282,10 +282,10 @@ public class CustomisableMessageBuilderFactory implements MessageBuilderFactory 
 			stringBuilder.append("(");
 		}
 
-		protected void buildArguments(StringBuilder stringBuilder) {
+		protected void addObject(StringBuilder stringBuilder) {
 			if (!log.argumentsTemplate().isEmpty()) {
 				if (Log.ARGUMENTS_DEFAULT_TEMPLATE.equals(log.argumentsTemplate())) {
-					stringBuilder.append(logFormatter.toString(args));
+					logFormatter.add(stringBuilder,args);
 				} else {
 					stringBuilder.append(logFormatter.toString(log.argumentsTemplate(), args));
 				}

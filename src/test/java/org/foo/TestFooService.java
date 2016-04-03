@@ -81,7 +81,9 @@ public class TestFooService {
 	@Test
 	public void testMap(){
 		fooService.getMap();
+		
 	}
+	
 	
 }
 

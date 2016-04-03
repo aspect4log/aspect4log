@@ -3,16 +3,16 @@ package org.foo.service;
 import static net.sf.aspect4log.Log.Level.DEBUG;
 import static net.sf.aspect4log.Log.Level.INFO;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import net.sf.aspect4log.Log;
-import net.sf.aspect4log.Log.Exceptions;
 
 import org.foo.dao.FooDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import net.sf.aspect4log.Log;
+import net.sf.aspect4log.Log.Exceptions;
 
 @Service
 @Log
@@ -52,7 +52,11 @@ public class FooService {
 			throw new IllegalArgumentException("Not FOO");
 	}
 
-	public Map<String, String> getMap() {
-		return Collections.singletonMap("key", "value");
+	public Map<String, Integer> getMap() {
+		Map<String,Integer> map = new HashMap<String,Integer>();
+		map.put("key1", 1);
+		map.put("key2", 2);
+		return map;
+		
 	}
 }
