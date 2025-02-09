@@ -15,6 +15,8 @@
   
  */
 package net.sf.aspect4log.conf;
+
+
 /**
  * This exception is thrown in case  aspect4log.xml or aspect4log-test.xml contains errors.  
  * 
